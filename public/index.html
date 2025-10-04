@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音訊轉文字工具/募資文案生成器/文案檢測</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .upload-section {
+      border: 2px dashed #ddd;
+      border-radius: 10px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 30px;
+      transition: border-color 0.3s;
+    }
+    
+    .upload-section:hover {
+      border-color: #007bff;
+    }
+    
+    .upload-section.dragover {
+      border-color: #007bff;
+      background-color: #f8f9fa;
+    }
+    
+    .file-input {
+      display: none;
+    }
+    
+    .upload-btn {
+      background: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px;
+    }
+    
+    .upload-btn:hover {
+      background: #0056b3;
+    }
+    
+    .upload-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    .file-info {
+      margin: 20px 0;
+      padding: 10px;
+      background: #e9ecef;
+      border-radius: 5px;
+      display: none;
+    }
+    
+    .result-section {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 5px;
+      display: none;
+    }
+    
+    .result-text {
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #007bff;
+    }
+    
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    
+    .success {
+      color: #155724;
+      background: #d4edda;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    
+    .form-section {
+      margin-top: 40px;
+      padding: 30px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .form-title {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .form-group label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #555;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .generate-btn {
+      background: #28a745;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    .generate-btn:hover {
+      background: #218838;
+    }
+    
+    .generate-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    .copy-result {
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 5px;
+      border-left: 4px solid #28a745;
+      display: none;
+    }
+    
+    .copy-text {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    
+    .copy-actions {
+      margin-top: 15px;
+      text-align: right;
+    }
+    
+    .copy-btn {
+      background: #007bff;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+    
+    .copy-btn:hover {
+      background: #0056b3;
+    }
+    
+    .check-btn {
+      background: #ffc107;
+      color: #212529;
+    }
+    
+    .check-btn:hover {
+      background: #e0a800;
+    }
+    
+    .check-result {
+      margin-top: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 5px;
+      border-left: 4px solid #ffc107;
+      display: none;
+    }
+    
+    .check-section {
+      margin-bottom: 20px;
+    }
+    
+    .check-section h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    
+    .check-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+    
+    .check-item.pass {
+      background: #d4edda;
+      color: #155724;
+      border-left: 3px solid #28a745;
+    }
+    
+    .check-item.warning {
+      background: #fff3cd;
+      color: #856404;
+      border-left: 3px solid #ffc107;
+    }
+    
+    .check-item.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 3px solid #dc3545;
+    }
+    
+    .check-summary {
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+    
+    .check-summary.pass {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .check-summary.warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .check-summary.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎵 音訊轉文字工具 & 📝 募資文案生成器 & 🔍 文案檢測</h1>
+    
+    <div class="upload-section" id="uploadSection">
+      <p>請選擇音訊檔案或拖拽檔案到此區域</p>
+      <input type="file" id="audioFile" class="file-input" accept="audio/*">
+      <button class="upload-btn" onclick="document.getElementById('audioFile').click()">
+        選擇音訊檔案
+      </button>
+      <p style="color: #666; font-size: 14px; margin-top: 10px;">
+        支援格式：MP3, WAV, M4A, FLAC 等音訊格式<br>
+        檔案大小限制：25MB
+      </p>
+    </div>
+    
+    <div class="file-info" id="fileInfo">
+      <strong>已選擇檔案：</strong>
+      <span id="fileName"></span>
+      <br>
+      <strong>檔案大小：</strong>
+      <span id="fileSize"></span>
+    </div>
+    
+    <div class="result-section" id="resultSection">
+      <h3>轉錄結果：</h3>
+      <div class="result-text" id="resultText"></div>
+    </div>
+    
+    <!-- 募資文案生成表單 -->
+    <div class="form-section">
+      <h2 class="form-title">📝 募資文案生成器</h2>
+      <form id="fundraisingForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="project_name">專案名稱 *</label>
+            <input type="text" id="project_name" name="project_name" required placeholder="請輸入您的專案名稱" value="創新科技產品募資專案">
+          </div>
+          
+          <div class="form-group">
+            <label for="target_fund">募資目標</label>
+            <input type="text" id="target_fund" name="target_fund" placeholder="例：100萬" value="100萬">
+          </div>
+          
+          <div class="form-group">
+            <label for="start_date">開始日期</label>
+            <input type="date" id="start_date" name="start_date">
+          </div>
+          
+          <div class="form-group">
+            <label for="end_date">結束日期</label>
+            <input type="date" id="end_date" name="end_date">
+          </div>
+          
+          <div class="form-group">
+            <label for="product_type">產品類型</label>
+            <select id="product_type" name="product_type">
+              <option value="">請選擇產品類型</option>
+              <option value="科技產品" selected>科技產品</option>
+              <option value="生活用品">生活用品</option>
+              <option value="文創商品">文創商品</option>
+              <option value="食品飲料">食品飲料</option>
+              <option value="服飾配件">服飾配件</option>
+              <option value="居家用品">居家用品</option>
+              <option value="運動健身">運動健身</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="tone_style">文案風格</label>
+            <select id="tone_style" name="tone_style">
+              <option value="專業友善" selected>專業友善</option>
+              <option value="活潑有趣">活潑有趣</option>
+              <option value="溫馨感人">溫馨感人</option>
+              <option value="科技感">科技感</option>
+              <option value="文青風格">文青風格</option>
+              <option value="簡約清新">簡約清新</option>
+            </select>
+          </div>
+          
+          <div class="form-group full-width">
+            <label for="brand_background">品牌背景</label>
+            <textarea id="brand_background" name="brand_background" placeholder="請描述您的品牌故事、創立理念、團隊背景等...">我們是一群熱愛創新的團隊，致力於開發能夠改善人們生活的產品。憑藉多年的行業經驗和對市場需求的深度理解，我們希望透過這個專案與大家分享我們的理念和產品。</textarea>
+          </div>
+          
+          <div class="form-group full-width">
+            <label for="core_features">核心特色</label>
+            <textarea id="core_features" name="core_features" placeholder="請描述產品的主要功能、特色、創新點等...">• 創新設計理念，結合實用性與美觀性
+• 高品質材料製作，確保產品耐用性
+• 人性化操作介面，簡單易用
+• 環保材質，符合永續發展理念
+• 獨特功能，解決現有產品的痛點</textarea>
+          </div>
+          
+          <div class="form-group full-width">
+            <label for="target_audience">目標族群</label>
+            <textarea id="target_audience" name="target_audience" placeholder="請描述您的目標客戶群體、年齡層、興趣愛好等...">主要針對25-45歲的都市上班族，他們注重生活品質，願意嘗試新產品，對科技產品有一定的接受度，並且重視產品的實用性和設計感。這群消費者通常有一定的消費能力，追求便利性和效率。</textarea>
+          </div>
+        </div>
+        
+        <button type="submit" class="generate-btn" id="generateBtn">
+          🚀 生成募資文案
+        </button>
+      </form>
+      
+      <div class="copy-result" id="copyResult">
+        <h3>生成的募資文案：</h3>
+        <div class="copy-text" id="copyText"></div>
+        <div class="copy-actions">
+          <button class="copy-btn" id="copyBtn">📋 複製文案</button>
+          <button class="copy-btn check-btn" id="checkBtn">🔍 檢測文案</button>
+          <button class="copy-btn" id="regenerateBtn">🔄 重新生成</button>
+        </div>
+        
+        <!-- 檢測結果區域 -->
+        <div class="check-result" id="checkResult">
+          <h3>🔍 文案檢測結果</h3>
+          <div id="checkContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const audioFile = document.getElementById('audioFile');
+    const uploadSection = document.getElementById('uploadSection');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const resultSection = document.getElementById('resultSection');
+    const resultText = document.getElementById('resultText');
+    const uploadBtn = document.querySelector('.upload-btn');
+    
+    // 募資文案生成相關元素
+    const fundraisingForm = document.getElementById('fundraisingForm');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyResult = document.getElementById('copyResult');
+    const copyText = document.getElementById('copyText');
+    const copyBtn = document.getElementById('copyBtn');
+    const checkBtn = document.getElementById('checkBtn');
+    const checkResult = document.getElementById('checkResult');
+    const checkContent = document.getElementById('checkContent');
+    const regenerateBtn = document.getElementById('regenerateBtn');
+
+    // 檔案選擇處理
+    audioFile.addEventListener('change', handleFileSelect);
+    
+    // 募資文案表單提交處理
+    fundraisingForm.addEventListener('submit', handleFundraisingSubmit);
+    
+    // 複製文案按鈕
+    copyBtn.addEventListener('click', copyToClipboard);
+    
+    // 檢測文案按鈕
+    checkBtn.addEventListener('click', checkCopy);
+    
+    // 重新生成按鈕
+    regenerateBtn.addEventListener('click', () => {
+      copyResult.style.display = 'none';
+      checkResult.style.display = 'none';
+      generateBtn.disabled = false;
+      generateBtn.textContent = '🚀 生成募資文案';
+    });
+    
+    // 設置日期預設值
+    function setDefaultDates() {
+      const today = new Date();
+      const startDate = new Date(today);
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() + 30); // 預設30天募資期間
+      
+      document.getElementById('start_date').value = startDate.toISOString().split('T')[0];
+      document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
+    }
+    
+    // 頁面載入時設置預設值
+    document.addEventListener('DOMContentLoaded', setDefaultDates);
+
+    // 拖拽功能
+    uploadSection.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadSection.classList.add('dragover');
+    });
+
+    uploadSection.addEventListener('dragleave', () => {
+      uploadSection.classList.remove('dragover');
+    });
+
+    uploadSection.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadSection.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        audioFile.files = files;
+        handleFileSelect();
+      }
+    });
+
+    function handleFileSelect() {
+      const file = audioFile.files[0];
+      if (file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.style.display = 'block';
+        
+        // 自動上傳檔案
+        uploadAudio(file);
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async function uploadAudio(file) {
+      const formData = new FormData();
+      formData.append('audio', file);
+
+      // 顯示載入狀態
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = '轉錄中...';
+      resultSection.style.display = 'block';
+      resultText.innerHTML = '<div class="loading">正在轉錄音訊，請稍候...</div>';
+
+      try {
+        const response = await fetch('/api/transcribe', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultText.innerHTML = `<div class="success">轉錄成功！</div><div class="result-text">${data.text}</div>`;
+        } else {
+          resultText.innerHTML = `<div class="error">轉錄失敗：${data.error}</div>`;
+        }
+      } catch (error) {
+        resultText.innerHTML = `<div class="error">網路錯誤：${error.message}</div>`;
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = '選擇音訊檔案';
+      }
+    }
+
+    // 募資文案生成處理
+    async function handleFundraisingSubmit(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(fundraisingForm);
+      const projectData = {};
+      
+      // 收集表單資料
+      for (let [key, value] of formData.entries()) {
+        projectData[key] = value;
+      }
+      
+      // 顯示載入狀態
+      generateBtn.disabled = true;
+      generateBtn.textContent = '生成中...';
+      copyResult.style.display = 'block';
+      copyText.innerHTML = '<div class="loading">正在生成募資文案，請稍候...</div>';
+      
+      try {
+        const response = await fetch('/api/fundraising/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(projectData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          copyText.innerHTML = `<div class="success">文案生成成功！</div><div class="copy-text">${data.result}</div>`;
+        } else {
+          copyText.innerHTML = `<div class="error">生成失敗：${data.error}</div>`;
+        }
+      } catch (error) {
+        copyText.innerHTML = `<div class="error">網路錯誤：${error.message}</div>`;
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = '🚀 生成募資文案';
+      }
+    }
+    
+    // 複製到剪貼簿
+    async function copyToClipboard() {
+      try {
+        await navigator.clipboard.writeText(copyText.textContent);
+        
+        // 顯示複製成功提示
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✅ 已複製';
+        copyBtn.style.background = '#28a745';
+        
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+          copyBtn.style.background = '#007bff';
+        }, 2000);
+      } catch (error) {
+        alert('複製失敗，請手動複製文案內容');
+      }
+    }
+    
+    // 檢測文案功能
+    async function checkCopy() {
+      // 檢查是否有生成的文案
+      const copyTextContent = copyText.textContent.trim();
+      if (!copyTextContent || copyTextContent.includes('正在生成') || copyTextContent.includes('生成失敗') || copyTextContent.includes('網路錯誤')) {
+        alert('請先生成募資文案再進行檢測');
+        return;
+      }
+      
+      // 收集表單資料
+      const formData = new FormData(fundraisingForm);
+      const projectData = {};
+      for (let [key, value] of formData.entries()) {
+        projectData[key] = value;
+      }
+      
+      // 顯示載入狀態
+      checkBtn.disabled = true;
+      checkBtn.textContent = '檢測中...';
+      checkResult.style.display = 'block';
+      checkContent.innerHTML = '<div class="loading">正在檢測文案，請稍候...</div>';
+      
+      try {
+        const response = await fetch('/api/fundraising/check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            copyContent: copyTextContent,
+            projectData: projectData
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          displayCheckResults(data);
+        } else {
+          checkContent.innerHTML = `<div class="error">檢測失敗：${data.error}</div>`;
+        }
+      } catch (error) {
+        checkContent.innerHTML = `<div class="error">網路錯誤：${error.message}</div>`;
+      } finally {
+        checkBtn.disabled = false;
+        checkBtn.textContent = '🔍 檢測文案';
+      }
+    }
+    
+    // 顯示檢測結果
+    function displayCheckResults(data) {
+      let html = '';
+      
+      // 總體檢測結果
+      const hasSensitiveContent = data.sensitiveCheckResult?.hasSensitiveContent || false;
+      const hasRegulatoryIssues = data.regulatoryCheckResult?.hasRegulatoryIssues || false;
+      const hasMissingElements = data.regulatoryCheckResult?.missingElements?.length > 0 || false;
+      
+      let overallStatus = 'pass';
+      let statusText = '✅ 檢測通過';
+      
+      if (hasSensitiveContent || hasRegulatoryIssues) {
+        overallStatus = 'error';
+        statusText = '❌ 檢測未通過';
+      } else if (hasMissingElements) {
+        overallStatus = 'warning';
+        statusText = '⚠️ 需要注意';
+      }
+      
+      html += `<div class="check-summary ${overallStatus}">${statusText}</div>`;
+      
+      // 敏感詞檢測結果
+      if (data.sensitiveCheckResult) {
+        html += '<div class="check-section">';
+        html += '<h4>🚫 敏感詞檢測</h4>';
+        
+        if (data.sensitiveCheckResult.hasSensitiveContent) {
+          if (data.sensitiveCheckResult.sensitiveWords && data.sensitiveCheckResult.sensitiveWords.length > 0) {
+            data.sensitiveCheckResult.sensitiveWords.forEach(word => {
+              html += `<div class="check-item error">發現敏感詞：${word}</div>`;
+            });
+          }
+          if (data.sensitiveCheckResult.issues && data.sensitiveCheckResult.issues.length > 0) {
+            data.sensitiveCheckResult.issues.forEach(issue => {
+              html += `<div class="check-item error">⚠️ ${issue}</div>`;
+            });
+          }
+        } else {
+          html += '<div class="check-item pass">✅ 未發現敏感詞</div>';
+        }
+        
+        if (data.sensitiveCheckResult.summary) {
+          html += `<div class="check-item warning">📋 ${data.sensitiveCheckResult.summary}</div>`;
+        }
+        
+        html += '</div>';
+      }
+      
+      // 法規檢測結果
+      if (data.regulatoryCheckResult) {
+        html += '<div class="check-section">';
+        html += '<h4>⚖️ 法規合規檢測</h4>';
+        
+        if (data.regulatoryCheckResult.hasRegulatoryIssues) {
+          if (data.regulatoryCheckResult.violations && data.regulatoryCheckResult.violations.length > 0) {
+            data.regulatoryCheckResult.violations.forEach(violation => {
+              html += `<div class="check-item error">⚠️ ${violation}</div>`;
+            });
+          }
+        } else {
+          html += '<div class="check-item pass">✅ 未發現法規違規</div>';
+        }
+        
+        if (data.regulatoryCheckResult.missingElements && data.regulatoryCheckResult.missingElements.length > 0) {
+          html += '<div class="check-item warning">📋 缺少必要元素：</div>';
+          data.regulatoryCheckResult.missingElements.forEach(element => {
+            html += `<div class="check-item warning">• ${element}</div>`;
+          });
+        }
+        
+        if (data.regulatoryCheckResult.summary) {
+          html += `<div class="check-item warning">💡 ${data.regulatoryCheckResult.summary}</div>`;
+        }
+        
+        html += '</div>';
+      }
+      
+      // 回饋建議
+      if (data.feedback) {
+        html += '<div class="check-section">';
+        html += '<h4>💬 回饋建議</h4>';
+        
+        // 將回饋文字轉換為 HTML 格式
+        const feedbackHtml = data.feedback
+          .replace(/### (.*?)\n/g, '<h5 style="margin: 15px 0 10px 0; color: #333; font-size: 16px;">$1</h5>')
+          .replace(/#### (.*?)\n/g, '<h6 style="margin: 10px 0 5px 0; color: #555; font-size: 14px;">$1</h6>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n\n/g, '</p><p style="margin: 8px 0;">')
+          .replace(/\n/g, '<br>');
+        
+        html += `<div class="check-item pass" style="text-align: left; line-height: 1.6;"><p style="margin: 8px 0;">${feedbackHtml}</p></div>`;
+        
+        html += '</div>';
+      }
+      
+      checkContent.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
